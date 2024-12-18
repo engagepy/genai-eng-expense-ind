@@ -112,7 +112,7 @@ def check_password():
 
     if not st.session_state.password_correct:
         st.markdown("<div class='title-gradient'>Engineering Expense Calculator</div>", unsafe_allow_html=True)
-        st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for Growing Teams</div>", unsafe_allow_html=True)
+        st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for GenAI Teams</div>", unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
@@ -141,7 +141,7 @@ def check_password():
                         <div class='card-description'>Strategic insights for resource allocation and budget planning.</div>
                     </div>
                     <div class='card'>
-                        <div class='card-title'>Financial Planning</div>
+                        <div class='card-title'>GenAI Planning</div>
                         <div class='card-description'>Data-driven decision making for sustainable team expansion.</div>
                     </div>
                 </div>
@@ -149,7 +149,7 @@ def check_password():
         """, unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Transforming Business Intelligence</div>", unsafe_allow_html=True)
+        st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Augmented Growth Intelligence</div>", unsafe_allow_html=True)
         return False
     return True
 
@@ -294,8 +294,8 @@ def create_expense_lines_chart(expenses, projections):
     return fig
 
 def main():
-    st.markdown("<div class='title-gradient'>Engineer Expense Calculator</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for Growing Teams</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title-gradient'>Engineering Expense Calculator</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for GenAI Teams</div>", unsafe_allow_html=True)
 
     with st.container():
         col1, col2, col3 = st.columns(3)
@@ -397,7 +397,7 @@ def main():
                 st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Transforming Business Intelligence</div>", unsafe_allow_html=True)
+    st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Augmented Growth Intelligence</div>", unsafe_allow_html=True)
 
 # Initialize the app
 st.set_page_config(layout="wide", page_title="Engineering Expense Calculator")
