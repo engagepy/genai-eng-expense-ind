@@ -162,15 +162,16 @@ def calculate_expenses(junior_count=0, mid_count=0, senior_count=0):
     
     total_employees = junior_count + mid_count + senior_count
     office_expense = total_employees * 15000 * 12
-    legal_expense = total_employees * 5000 * 12
-    accounting_expense = total_employees * 3000 * 12
-    device_training = 200000
-    
+    legal_expense = total_employees * 5000
+    accounting_expense = total_employees * 5000
+    # Scale device and training cost by number of employees
+    device_training = 200000 * total_employees
+
     total_expense = (sum(salary_expenses.values()) + 
-                    office_expense + 
-                    legal_expense + 
-                    accounting_expense + 
-                    device_training)
+                     office_expense + 
+                     legal_expense + 
+                     accounting_expense + 
+                     device_training)
     
     return {
         'salary_breakdown': salary_expenses,
@@ -184,7 +185,7 @@ def calculate_expenses(junior_count=0, mid_count=0, senior_count=0):
 
 def project_growth(initial_expenses, years=5):
     inflation_rate = 0.09
-    quarterly_team_growth = 0.10
+    quarterly_team_growth = 0.015
     quarters = years * 4
     projections = []
     
@@ -194,37 +195,40 @@ def project_growth(initial_expenses, years=5):
     base_office = initial_expenses['office_expense']
     base_legal = initial_expenses['legal_expense']
     base_accounting = initial_expenses['accounting_expense']
-    
+    device_training = initial_expenses['device_training']
+
     for quarter in range(quarters):
         year = quarter // 4
-        # Update employee count first
+        # Update employee count
         current_employees = initial_expenses['total_employees'] * (1 + quarterly_team_growth)**(quarter + 1)
         
-        # Calculate expenses with both inflation and team growth
+        # Calculate factors
         inflation_factor = (1 + inflation_rate)**(year + 1)
         employee_factor = current_employees / initial_expenses['total_employees']
         
-        current_salary = base_salary * inflation_factor * employee_factor
-        current_office = base_office * inflation_factor * employee_factor
-        current_legal = base_legal * inflation_factor * employee_factor
-        current_accounting = base_accounting * inflation_factor * employee_factor
-        
-        total_expense = (current_salary + current_office + 
-                        current_legal + current_accounting + 
-                        initial_expenses['device_training'])
-        
+        # Convert annual expenses to quarterly expenses
+        quarterly_salary = (base_salary * inflation_factor * employee_factor) / 4
+        quarterly_office = (base_office * inflation_factor * employee_factor) / 4
+        quarterly_legal = (base_legal * inflation_factor * employee_factor) / 4
+        quarterly_accounting = (base_accounting * inflation_factor * employee_factor) / 4
+
+        total_expense = quarterly_salary + quarterly_office + quarterly_legal + quarterly_accounting
+
+        # Add one-time device & training cost only in the first quarter
+        if quarter == 0:
+            total_expense += device_training
+
         projections.append({
             'Quarter': f'Q{(quarter % 4) + 1} Y{year + 1}',
             'Expenses': total_expense,
             'Employees': current_employees,
-            'Salary_Expenses': current_salary,
-            'Office_Expenses': current_office,
-            'Legal_Expenses': current_legal,
-            'Accounting_Expenses': current_accounting
+            'Salary_Expenses': quarterly_salary,
+            'Office_Expenses': quarterly_office,
+            'Legal_Expenses': quarterly_legal,
+            'Accounting_Expenses': quarterly_accounting
         })
     
     return pd.DataFrame(projections)
-
 
 def create_expense_breakdown_chart(expenses):
     labels = ['Salary', 'Office', 'Legal', 'Accounting', 'Device & Training']
@@ -311,42 +315,45 @@ def main():
             expenses = calculate_expenses(junior_count, mid_count, senior_count)
             projections = project_growth(expenses)
             
-            # Calculate year-end values (Q4 of each year)
-            year1_total = projections['Expenses'].iloc[3]  # Q4 Y1
-            year2_total = projections['Expenses'].iloc[7]  # Q4 Y2
-            year3_total = projections['Expenses'].iloc[11] # Q4 Y3
+            # Calculate yearly totals (sum of all 4 quarters for each year)
+            year1_total = projections['Expenses'].iloc[0:4].sum()   # Q1-Q4 Y1
+            year2_total = projections['Expenses'].iloc[4:8].sum()   # Q1-Q4 Y2
+            year3_total = projections['Expenses'].iloc[8:12].sum()  # Q1-Q4 Y3
             
-            # Calculate growth percentages
+            # Team size growth calculations for Year 1, Year 2, and Year 3
             team_growth_y1 = ((projections['Employees'].iloc[3] / projections['Employees'].iloc[0]) - 1) * 100
             team_growth_y2 = ((projections['Employees'].iloc[7] / projections['Employees'].iloc[3]) - 1) * 100
-            
-            # Calculate total 3-year expenses
-            total_3_years = projections['Expenses'].sum()
+            team_growth_y3 = ((projections['Employees'].iloc[11] / projections['Employees'].iloc[7]) - 1) * 100
+
+            # 3-year total from summing the first 12 quarters
+            total_3_years = projections['Expenses'].iloc[:12].sum()
             
             st.markdown("### Projected Annual Totals")
             y1, y2, y3, total = st.columns(4)
             with y1:
-                st.metric("Year 1 Total", 
-                         f"₹{year1_total/10000000:.1f}Cr", 
-                         delta=f"+{team_growth_y1:.0f}% Team Size")
+                st.metric(
+                    "Year 1 Total",
+                    f"₹{year1_total/10000000:.2f}Cr",
+                    delta=f"+{team_growth_y1:.2f}% Team | +9% Inf"
+                )
             with y2:
-                st.metric("Year 2 Total", 
-                         f"₹{year2_total/10000000:.1f}Cr",
-                         delta=f"+{team_growth_y2:.0f}% Team Size")
+                st.metric(
+                    "Year 2 Total",
+                    f"₹{year2_total/10000000:.2f}Cr",
+                    delta=f"+{team_growth_y2:.2f}% Team | +9% Inf"
+                )
             with y3:
-                st.metric("Year 3 Total", 
-                         f"₹{year3_total/10000000:.1f}Cr",
-                         delta=f"+9% Inflation")
-            # Calculate 3-year total from year-end values only
-            total_3_years = year1_total + year2_total + year3_total
-
-            # Display metrics
+                st.metric(
+                    "Year 3 Total",
+                    f"₹{year3_total/10000000:.2f}Cr",
+                    delta=f"+{team_growth_y3:.2f}% Team | +9% Inf"
+                )
             with total:
-                st.metric("3-Year Total", 
-                        f"₹{total_3_years/10000000:.1f}Cr")
+                st.metric(
+                    "3-Year Total",
+                    f"₹{total_3_years/10000000:.2f}Cr"
+                )
 
-
-            # Rest of the visualization code remains the same
             col1, col2 = st.columns(2)
             with col1:
                 st.plotly_chart(create_expense_breakdown_chart(expenses), use_container_width=True)
@@ -359,41 +366,41 @@ def main():
             with tab1:
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=projections['Quarter'], y=projections['Salary_Expenses'],
-                                       name='Salary', line=dict(color='#FF6B6B')))
+                                         name='Salary', line=dict(color='#FF6B6B')))
                 fig.update_layout(title='Salary Expense Projection',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                font=dict(color='white'))
+                                  paper_bgcolor='rgba(0,0,0,0)',
+                                  plot_bgcolor='rgba(0,0,0,0)',
+                                  font=dict(color='white'))
                 st.plotly_chart(fig, use_container_width=True)
             
             with tab2:
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=projections['Quarter'], y=projections['Office_Expenses'],
-                                       name='Office', line=dict(color='#FF8E53')))
+                                         name='Office', line=dict(color='#FF8E53')))
                 fig.update_layout(title='Office Expense Projection',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                font=dict(color='white'))
+                                  paper_bgcolor='rgba(0,0,0,0)',
+                                  plot_bgcolor='rgba(0,0,0,0)',
+                                  font=dict(color='white'))
                 st.plotly_chart(fig, use_container_width=True)
             
             with tab3:
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=projections['Quarter'], y=projections['Legal_Expenses'],
-                                       name='Legal', line=dict(color='#FFA41B')))
+                                         name='Legal', line=dict(color='#FFA41B')))
                 fig.update_layout(title='Legal Expense Projection',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                font=dict(color='white'))
+                                  paper_bgcolor='rgba(0,0,0,0)',
+                                  plot_bgcolor='rgba(0,0,0,0)',
+                                  font=dict(color='white'))
                 st.plotly_chart(fig, use_container_width=True)
             
             with tab4:
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=projections['Quarter'], y=projections['Accounting_Expenses'],
-                                       name='Accounting', line=dict(color='#FFB649')))
+                                         name='Accounting', line=dict(color='#FFB649')))
                 fig.update_layout(title='Accounting Expense Projection',
-                                paper_bgcolor='rgba(0,0,0,0)',
-                                plot_bgcolor='rgba(0,0,0,0)',
-                                font=dict(color='white'))
+                                  paper_bgcolor='rgba(0,0,0,0)',
+                                  plot_bgcolor='rgba(0,0,0,0)',
+                                  font=dict(color='white'))
                 st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
@@ -410,4 +417,3 @@ if not check_password():
     st.stop()
 elif __name__ == "__main__":
     main()
-
