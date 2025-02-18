@@ -81,6 +81,29 @@ def init_styling():
             line-height: 1.5;
             text-align: center;
         }
+        /* Center button container */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin: 20px 0;
+        }
+        /* Updated button styling */
+        .stButton > button {
+            background: linear-gradient(90deg, #FF6B6B, #FF8E53) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 10px !important;
+            padding: 12px 30px !important;
+            font-size: 1.2rem !important;
+            cursor: pointer !important;
+            transition: transform 0.2s ease !important;
+            width: auto !important;
+        }
+        .stButton > button:hover {
+            transform: scale(1.05) !important;
+            background: linear-gradient(90deg, #FF8E53, #FF6B6B) !important;
+        }
         .metric-container {
             background: linear-gradient(145deg, rgba(20, 20, 30, 0.9), rgba(30, 30, 45, 0.9));
             border-radius: 15px;
@@ -104,54 +127,6 @@ def init_styling():
         </style>
     """, unsafe_allow_html=True)
 
-def check_password():
-    if "password" not in st.session_state:
-        st.session_state.password = ""
-    if "password_correct" not in st.session_state:
-        st.session_state.password_correct = False
-
-    if not st.session_state.password_correct:
-        st.markdown("<div class='title-gradient'>Engineering Expense Calculator</div>", unsafe_allow_html=True)
-        st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for GenAI Teams</div>", unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            st.text_input(
-                "Enter passcode", 
-                type="password", 
-                key="password",
-                on_change=lambda: st.session_state.update(
-                    password_correct=st.session_state.get("password", "") == "1111"
-                )
-            )
-
-        st.markdown("""
-            <div class='cards-scroll-container'>
-                <div class='card-container'>
-                    <div class='card'>
-                        <div class='card-title'>Expense Analysis</div>
-                        <div class='card-description'>Comprehensive breakdown of team expenses with smart categorization.</div>
-                    </div>
-                    <div class='card'>
-                        <div class='card-title'>Growth Projections</div>
-                        <div class='card-description'>Advanced forecasting with inflation and team growth calculations.</div>
-                    </div>
-                    <div class='card'>
-                        <div class='card-title'>Cost Optimization</div>
-                        <div class='card-description'>Strategic insights for resource allocation and budget planning.</div>
-                    </div>
-                    <div class='card'>
-                        <div class='card-title'>GenAI Planning</div>
-                        <div class='card-description'>Data-driven decision making for sustainable team expansion.</div>
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Augmented Growth Intelligence</div>", unsafe_allow_html=True)
-        return False
-    return True
 
 def calculate_expenses(junior_count=0, mid_count=0, senior_count=0):
     salary_expenses = {
@@ -217,7 +192,7 @@ def project_growth(initial_expenses, years=5):
         # Add one-time device & training cost only in the first quarter
         if quarter == 0:
             total_expense += device_training
-
+        
         projections.append({
             'Quarter': f'Q{(quarter % 4) + 1} Y{year + 1}',
             'Expenses': total_expense,
@@ -298,6 +273,7 @@ def create_expense_lines_chart(expenses, projections):
     return fig
 
 def main():
+   
     st.markdown("<div class='title-gradient'>Engineering Expense Calculator</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitle-gradient'>Smart Financial Planning for GenAI Teams</div>", unsafe_allow_html=True)
 
@@ -324,7 +300,7 @@ def main():
             team_growth_y1 = ((projections['Employees'].iloc[3] / projections['Employees'].iloc[0]) - 1) * 100
             team_growth_y2 = ((projections['Employees'].iloc[7] / projections['Employees'].iloc[3]) - 1) * 100
             team_growth_y3 = ((projections['Employees'].iloc[11] / projections['Employees'].iloc[7]) - 1) * 100
-
+            
             # 3-year total from summing the first 12 quarters
             total_3_years = projections['Expenses'].iloc[:12].sum()
             
@@ -403,6 +379,29 @@ def main():
                                   font=dict(color='white'))
                 st.plotly_chart(fig, use_container_width=True)
 
+    st.markdown("""
+        <div class='cards-scroll-container'>
+            <div class='card-container'>
+                <div class='card'>
+                    <div class='card-title'>Expense Analysis</div>
+                    <div class='card-description'>Comprehensive breakdown of team expenses with smart categorization.</div>
+                </div>
+                <div class='card'>
+                    <div class='card-title'>Growth Projections</div>
+                    <div class='card-description'>Advanced forecasting with inflation and team growth calculations.</div>
+                </div>
+                <div class='card'>
+                    <div class='card-title'>Cost Optimization</div>
+                    <div class='card-description'>Strategic insights for resource allocation and budget planning.</div>
+                </div>
+                <div class='card'>
+                    <div class='card-title'>GenAI Planning</div>
+                    <div class='card-description'>Data-driven decision making for sustainable team expansion.</div>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("---")
     st.markdown("<div class='footer-gradient'>© 2024 M37Labs - Augmented Growth Intelligence</div>", unsafe_allow_html=True)
 
@@ -413,7 +412,5 @@ init_styling()
 key = os.environ.get('OPENAI_API_KEY')
 client = openai.OpenAI(api_key=str(key))
 
-if not check_password():
-    st.stop()
-elif __name__ == "__main__":
+if __name__ == "__main__":
     main()
